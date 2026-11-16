@@ -155,13 +155,13 @@ nonzero exit code. Tests cover container mutation and enumeration, scalar roots,
 escaping and Unicode, nested and empty containers, culture-independent numbers,
 invalid syntax, duplicate keys, overflow, null handling, cycles, shared children,
 and the depth limit. CI runs the build, suite, example, and local packaging on
-Linux, macOS, and Windows. A configured workflow is not evidence that remote
-CI has already passed.
+Linux, macOS, and Windows. The [post-merge CI run for commit `9df607c`](https://github.com/kleberandrade/prime-json/actions/runs/43794230509)
+passed all four steps on all three operating systems.
 
 Local verification on macOS ARM64 with SDK 10.0.404 completed successfully:
 Release build with zero warnings/errors, all 52 regression cases, the executable
 example, and `dotnet pack`. The generated package includes the library, README,
-and license. Linux and Windows execution remains to be verified by CI.
+and license.
 
 ## Limits and compatibility
 
