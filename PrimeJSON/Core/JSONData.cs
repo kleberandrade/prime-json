@@ -1,4 +1,4 @@
-﻿/* The MIT License (MIT)
+/* The MIT License (MIT)
  * 
  * Copyright (c) 2013 PrimeJSON
  * 
@@ -29,12 +29,12 @@ namespace PrimeJSON.Core
 {
     public class JSONData : JSONNode
     {
-        private string _sValue;
+        private string? _sValue;
         private bool _bValue;
         private double _dValue;
         private string _type = "JSONData";
 
-        public JSONData(string value)
+        public JSONData(string? value)
         {
             this._sValue = value;
             if (value == null)
@@ -51,11 +51,12 @@ namespace PrimeJSON.Core
 
         public JSONData(double value)
         {
+            ValidateNumber(value);
             this._dValue = value;
             this._type = "JSONNumber";
         }
 
-        public override string JSONString
+        public override string? JSONString
         {
             get
             {
@@ -92,6 +93,7 @@ namespace PrimeJSON.Core
             }
             set
             {
+                ValidateNumber(value);
                 this._dValue = value;
                 this._type = "JSONNumber";
             }
@@ -105,18 +107,12 @@ namespace PrimeJSON.Core
             }
         }
 
-        public override string ToJSON()
+        private static void ValidateNumber(double value)
         {
-            if (this._type == "JSONNull")
-                return "null";
-            else if (this._type == "JSONString")
-                return "\"" + this._sValue + "\"";
-            else if (this._type == "JSONBoolean")
-                return this._bValue.ToString().ToLower();
-            else if (this._type == "JSONNumber")
-                return this._dValue.ToString().Replace(',', '.');
-            else
-                return "";
+            if (!double.IsFinite(value))
+                throw new ArgumentOutOfRangeException(nameof(value), "JSON numbers must be finite.");
         }
+
+        public override string ToJSON() => JSONSerialization.Serialize(this);
     }
 }

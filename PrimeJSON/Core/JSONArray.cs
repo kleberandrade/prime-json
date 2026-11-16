@@ -1,4 +1,4 @@
-﻿/* The MIT License (MIT)
+/* The MIT License (MIT)
  * 
  * Copyright (c) 2013 PrimeJSON
  * 
@@ -44,6 +44,7 @@ namespace PrimeJSON.Core
             }
             set
             {
+                ArgumentNullException.ThrowIfNull(value);
                 this._value[index] = value;
             }
         }
@@ -66,6 +67,7 @@ namespace PrimeJSON.Core
 
         public override void Add(JSONNode node)
         {
+            ArgumentNullException.ThrowIfNull(node);
             this._value.Add(node);
         }
 
@@ -88,18 +90,7 @@ namespace PrimeJSON.Core
                 yield return node;
         }
 
-        public override string ToJSON()
-        {
-            StringBuilder json = new StringBuilder("");
-            json.Append(JSONArray.BEGIN);
-            for (int i = 0; i < this.Count; i++)
-            {
-                json.Append(this[i].ToJSON());
-                if (i != this.Count - 1)
-                    json.Append(JSONArray.COMMA);
-            }
-            json.Append(JSONArray.END);
-            return json.ToString();
-        }
+        public override string ToJSON() => JSONSerialization.Serialize(this);
+
     }
 }

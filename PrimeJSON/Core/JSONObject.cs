@@ -1,4 +1,4 @@
-﻿/* The MIT License (MIT)
+/* The MIT License (MIT)
  * 
  * Copyright (c) 2013 PrimeJSON
  * 
@@ -45,6 +45,7 @@ namespace PrimeJSON.Core
             }
             set
             {
+                ArgumentNullException.ThrowIfNull(value);
                 this._value[key] = value;
             }
         }
@@ -59,6 +60,7 @@ namespace PrimeJSON.Core
             set
             {
                 string key = this.ElementAt(index).Key;
+                ArgumentNullException.ThrowIfNull(value);
                 this._value[key] = value;
             }
         }
@@ -81,6 +83,7 @@ namespace PrimeJSON.Core
 
         public override void Add(string key, JSONNode node)
         {
+            ArgumentNullException.ThrowIfNull(node);
             this._value.Add(key, node);
         }
 
@@ -111,20 +114,7 @@ namespace PrimeJSON.Core
                 yield return kvp;
         }
 
-        public override string ToJSON()
-        {
-            StringBuilder json = new StringBuilder("");
-            json.Append(JSONObject.BEGIN);
-            for (int i = 0; i < this.Count; i++)
-            {
-                KeyValuePair<string, JSONNode> kvp = this.ElementAt(i);
-                json.Append("\"" + kvp.Key + "\" : " + kvp.Value.ToJSON());
-                if (i != this.Count - 1)
-                    json.Append(JSONObject.COMMA);
-            }
-            json.Append(JSONObject.END);
-            return json.ToString();
-        }
+        public override string ToJSON() => JSONSerialization.Serialize(this);
 
         private KeyValuePair<string, JSONNode> ElementAt(int index)
         {

@@ -1,4 +1,4 @@
-﻿/* The MIT License (MIT)
+/* The MIT License (MIT)
  * 
  * Copyright (c) 2013 PrimeJSON
  * 
@@ -51,7 +51,7 @@ namespace PrimeJSON.Core
         }
 
         // JSONData Interface
-        public virtual string JSONString { get { throw new NotImplementedException(); } set { throw new NotImplementedException(); } }
+        public virtual string? JSONString { get { throw new NotImplementedException(); } set { throw new NotImplementedException(); } }
         public virtual bool JSONBoolean { get { throw new NotImplementedException(); } set { throw new NotImplementedException(); } }
         public virtual double JSONNumber { get { throw new NotImplementedException(); } set { throw new NotImplementedException(); } }
     }

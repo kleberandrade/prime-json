@@ -1,4 +1,4 @@
-﻿/* The MIT License (MIT)
+/* The MIT License (MIT)
  * 
  * Copyright (c) 2013 PrimeJSON
  * 
@@ -21,365 +21,60 @@
  * 
  */
 
-using System;
-using System.Collections.Generic;
-using System.Text;
+using System.Text.Json;
 
-namespace PrimeJSON.Core
+namespace PrimeJSON.Core;
+
+public class JSONParser
 {
-    public class JSONParser
+    /// <summary>Parses one complete JSON value. Duplicate keys and depths above 64 are rejected.</summary>
+    public static JSONNode Parse(string json)
     {
-        public static JSONNode Parse(string json)
+        ArgumentNullException.ThrowIfNull(json);
+        try
         {
-            int i = 0;
-            if (json[i] == '{')
-                return JSONParser.automatoObject(json, ref i);
-            else if (json[i] == '[')
-                return JSONParser.automatoArray(json, ref i);
-            else
-                throw new FormatException();
-        }
-
-        private static string automatoString(string str, ref int index)
-        {
-            int estado = 0;
-            StringBuilder valor = new StringBuilder();
-
-            while (index < str.Length)
+            using var document = JsonDocument.Parse(json, new JsonDocumentOptions
             {
-                if (str[index] == '"' && estado == 0)
-                    estado = 1;
-                else if (str[index] == '"' && estado == 1)
-                    break;
-                else if (estado == 1)
-                    valor.Append(str[index]);
-                index++;
-            }
-            return valor.ToString();
+                MaxDepth = 64,
+                AllowDuplicateProperties = false
+            });
+            return ConvertElement(document.RootElement);
         }
-
-        private static bool automatoTrue(string str, ref int index)
+        // Invalid Unicode escapes can surface during lazy string decoding.
+        catch (Exception exception) when (exception is JsonException or InvalidOperationException)
         {
-            int estado = 0;
-            StringBuilder valor = new StringBuilder();
-
-            while (index < str.Length)
-            {
-                if (str[index] == 't' && estado == 0)
-                {
-                    valor.Append(str[index]);
-                    estado = 1;
-                }
-                else if (str[index] != 't' && estado == 0)
-                    throw new FormatException();
-                else if (str[index] == 'r' && estado == 1)
-                {
-                    valor.Append(str[index]);
-                    estado = 2;
-                }
-                else if (str[index] != 'r' && estado == 1)
-                    throw new FormatException();
-                else if (str[index] == 'u' && estado == 2)
-                {
-                    valor.Append(str[index]);
-                    estado = 3;
-                }
-                else if (str[index] != 'u' && estado == 2)
-                    throw new FormatException();
-                else if (str[index] == 'e' && estado == 3)
-                {
-                    valor.Append(str[index]);
-                    break;
-                }
-                else if (str[index] != 'e' && estado == 3)
-                    throw new FormatException();
-                else
-                    estado = 0;
-                index++;
-            }
-
-            return Convert.ToBoolean(valor.ToString());
+            throw new FormatException("Invalid JSON: " + exception.Message, exception);
         }
+    }
 
-        private static bool automatoFalse(string str, ref int index)
+    private static JSONNode ConvertElement(JsonElement element)
+    {
+        switch (element.ValueKind)
         {
-            int estado = 0;
-            StringBuilder valor = new StringBuilder();
-
-            while (index < str.Length)
-            {
-                if (str[index] == 'f' && estado == 0)
-                {
-                    valor.Append(str[index]);
-                    estado = 1;
-                }
-                else if (str[index] != 'f' && estado == 0)
-                    throw new FormatException();
-                else if (str[index] == 'a' && estado == 1)
-                {
-                    valor.Append(str[index]);
-                    estado = 2;
-                }
-                else if (str[index] != 'a' && estado == 1)
-                    throw new FormatException();
-                else if (str[index] == 'l' && estado == 2)
-                {
-                    valor.Append(str[index]);
-                    estado = 3;
-                }
-                else if (str[index] != 'l' && estado == 2)
-                    throw new FormatException();
-                else if (str[index] == 's' && estado == 3)
-                {
-                    valor.Append(str[index]);
-                    estado = 4;
-                }
-                else if (str[index] != 's' && estado == 3)
-                    throw new FormatException();
-                else if (str[index] == 'e' && estado == 4)
-                {
-                    valor.Append(str[index]);
-                    break;
-                }
-                else if (str[index] != 'e' && estado == 4)
-                    throw new FormatException();
-                else
-                    estado = 0;
-                index++;
-            }
-
-            return Convert.ToBoolean(valor.ToString());
-        }
-
-        private static string automatoNull(string str, ref int index)
-        {
-            int estado = 0;
-            StringBuilder valor = new StringBuilder();
-
-            while (index < str.Length)
-            {
-                if (str[index] == 'n' && estado == 0)
-                {
-                    valor.Append(str[index]);
-                    estado = 1;
-                }
-                else if (str[index] != 'n' && estado == 0)
-                    throw new FormatException();
-                else if (str[index] == 'u' && estado == 1)
-                {
-                    valor.Append(str[index]);
-                    estado = 2;
-                }
-                else if (str[index] != 'u' && estado == 1)
-                    throw new FormatException();
-                else if (str[index] == 'l' && estado == 2)
-                {
-                    valor.Append(str[index]);
-                    estado = 3;
-                }
-                else if (str[index] != 'l' && estado == 2)
-                    throw new FormatException();
-                else if (str[index] == 'l' && estado == 3)
-                {
-                    valor.Append(str[index]);
-                    break;
-                }
-                else if (str[index] != 'l' && estado == 3)
-                    throw new FormatException();
-                else
-                {
-                    estado = 0;
-                }
-                index++;
-            }
-
-            if (valor.ToString() == "null")
-                return null;
-            else
-                throw new FormatException();
-        }
-
-        private static double automatoNumber(string str, ref int index)
-        {
-            int estado = 0;
-            StringBuilder valor = new StringBuilder();
-
-            while (index < str.Length)
-            {
-                if (str[index] == '-' && estado == 0)
-                {
-                    valor.Append(str[index]);
-                    estado = 1;
-                }
-                else if (str[index] == '0' && (estado == 0 || estado == 1))
-                {
-                    valor.Append(str[index]);
-                    estado = 2;
-                }
-                else if ((Char.GetNumericValue(str[index]) > 0 && Char.GetNumericValue(str[index]) < 10) && (estado == 0 || estado == 1))
-                {
-                    valor.Append(str[index]);
-                    estado = 3;
-                }
-                else if ((str[index] == 'e' || str[index] == 'E') && (estado == 2 || estado == 3 || estado == 4))
-                {
-                    valor.Append(str[index]);
-                    estado = 6;
-                }
-                else if (str[index] == '+' || str[index] == '-' && estado == 6)
-                {
-                    valor.Append(str[index]);
-                    estado = 7;
-                }
-                else if (str[index] == '.' && (estado == 2 || estado == 3 || estado == 4))
-                {
-                    valor.Append(str[index]);
-                    estado = 5;
-                }
-                else if ((Char.GetNumericValue(str[index]) >= 0 && Char.GetNumericValue(str[index]) <= 9) && (estado == 3 || estado == 4 || estado == 5 || estado == 6 || estado == 7))
-                {
-                    valor.Append(str[index]);
-                    estado = 4;
-                }
-                else if ((str[index] == ' ' || str[index] == ']' || str[index] == '}' || str[index] == ',') && (estado == 2 || estado == 3 || estado == 4))
-                    break;
-                else if (str[index] != '-' && !char.IsNumber(str[index]) && estado == 0)
-                    throw new FormatException();
-                else if (!char.IsNumber(str[index]) && estado == 1)
-                    throw new FormatException();
-                else if (str[index] != 'e' && str[index] != 'E' && str[index] != '.' && estado == 2)
-                    throw new FormatException();
-                else if (str[index] != 'e' && str[index] != 'E' && str[index] != '.' && !char.IsNumber(str[index]) && (estado == 3 || estado == 4))
-                    throw new FormatException();
-                else if (!char.IsNumber(str[index]) && (estado == 5 || estado == 7))
-                    throw new FormatException();
-                else if (str[index] != '+' && str[index] != '-' && !char.IsNumber(str[index])  && estado == 6)
-                    throw new FormatException();
-                index++;
-            }
-            index--;
-            return double.Parse(valor.ToString(), System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture);
-        }
-
-        private static JSONNode automatoArray(string str, ref int index)
-        {
-            JSONNode json = new JSONArray();
-            int estado = 0;
-
-            while (index < str.Length)
-            {
-                if ((str[index] == '[' || str[index] == ',') && estado == 0)
-                    estado = 1;
-                else if (str[index] == '"' && estado == 1)
-                {
-                    json.Add(new JSONData(JSONParser.automatoString(str, ref index)));
-                    estado = 0;
-                }
-                else if (str[index] == 't' && estado == 1)
-                {
-                    json.Add(new JSONData(JSONParser.automatoTrue(str, ref index)));
-                    estado = 0;
-                }
-                else if (str[index] == 'f' && estado == 1)
-                {
-                    json.Add(new JSONData(JSONParser.automatoFalse(str, ref index)));
-                    estado = 0;
-                }
-                else if (str[index] == 'n' && estado == 1)
-                {
-                    json.Add(new JSONData(automatoNull(str, ref index)));
-                    estado = 0;
-                }
-                else if ((char.IsNumber(str[index]) || str[index] == '-') && estado == 1)
-                {
-                    json.Add(new JSONData(JSONParser.automatoNumber(str, ref index)));
-                    estado = 0;
-                }
-                else if (str[index] == '[' && estado == 1)
-                {
-                    json.Add(JSONParser.automatoArray(str, ref index));
-                    estado = 0;
-                }
-                else if (str[index] == '{' && estado == 1)
-                    json.Add(JSONParser.automatoObject(str, ref index));
-                else if (str[index] == ']' && estado == 0)
-                    break;
-                else if (str[index] == ' ') { }
-                else
-                    throw new FormatException();
-               index++;
-            }
-
-            return json;
-        }
-
-        private static JSONNode automatoObject(string str, ref int index)
-        {
-            JSONNode json = new JSONObject();
-            int estado = 0;
-            string key = "";
-
-            while (index < str.Length)
-            {
-                if ((str[index] == '{' || str[index] == ',') && estado == 0)
-                    estado = 1;
-                else if (str[index] == ':' && estado == 0)
-                    estado = 2;
-                else if (str[index] == '"' && (estado == 1 || estado == 2))
-                {
-                    if (estado == 1)
-                        key = JSONParser.automatoString(str, ref index);
-                    else if (estado == 2)
-                    {
-                        json.Add(key, new JSONData(JSONParser.automatoString(str, ref index)));
-                        key = "";
-                    }
-                    estado = 0;
-                }
-                else if (str[index] == 't' && estado == 2)
-                {
-                    json.Add(key, new JSONData(JSONParser.automatoTrue(str, ref index)));
-                    key = "";
-                    estado = 0;
-                }
-                else if (str[index] == 'f' && estado == 2)
-                {
-                    json.Add(key, new JSONData(JSONParser.automatoFalse(str, ref index)));
-                    key = "";
-                    estado = 0;
-                }
-                else if (str[index] == 'n' && estado == 2)
-                {
-                    json.Add(key, new JSONData(JSONParser.automatoNull(str, ref index)));
-                    key = "";
-                    estado = 0;
-                }
-                else if (((Char.GetNumericValue(str[index]) >= 0 && Char.GetNumericValue(str[index]) <= 9) || str[index] == '-') && estado == 2)
-                {
-                    json.Add(key, new JSONData(JSONParser.automatoNumber(str, ref index)));
-                    key = "";
-                    estado = 0;
-                }
-                else if (str[index] == '[' && estado == 2)
-                {
-                    json.Add(key, JSONParser.automatoArray(str, ref index));
-                    key = "";
-                    estado = 0;
-                }
-                else if (str[index] == '{' && estado == 2)
-                {
-                    json.Add(key, JSONParser.automatoObject(str, ref index));
-                    key = "";
-                    estado = 0;
-                }
-                else if (str[index] == '}' && estado == 0)
-                    break;
-                else if (str[index] == ' ') { }
-                else
-                    throw new FormatException();
-                index++;
-            }
-            return json;
+            case JsonValueKind.Object:
+                var obj = new JSONObject();
+                foreach (var property in element.EnumerateObject())
+                    obj.Add(property.Name, ConvertElement(property.Value));
+                return obj;
+            case JsonValueKind.Array:
+                var array = new JSONArray();
+                foreach (var item in element.EnumerateArray())
+                    array.Add(ConvertElement(item));
+                return array;
+            case JsonValueKind.String:
+                return new JSONData(element.GetString());
+            case JsonValueKind.Number:
+                if (!element.TryGetDouble(out var number) || !double.IsFinite(number))
+                    throw new FormatException("JSON number is outside the finite double range.");
+                return new JSONData(number);
+            case JsonValueKind.True:
+                return new JSONData(true);
+            case JsonValueKind.False:
+                return new JSONData(false);
+            case JsonValueKind.Null:
+                return new JSONData((string?)null);
+            default:
+                throw new FormatException("Unsupported JSON value.");
         }
     }
 }

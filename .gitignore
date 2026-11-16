@@ -172,3 +172,9 @@ UpgradeLog*.htm
 
 # Microsoft Fakes
 FakesAssemblies
+# Local validation SDK and CLI state
+.tools/
+.dotnet-home/
+.nuget/
+artifacts/
+.DS_Store
