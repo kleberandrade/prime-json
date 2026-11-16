@@ -1,5 +1,11 @@
 # PrimeJSON
 
+[![C#](https://img.shields.io/badge/language-C%23-512BD4)](https://learn.microsoft.com/dotnet/csharp/)
+[![.NET 10](https://img.shields.io/badge/.NET-10-512BD4)](https://dotnet.microsoft.com/download/dotnet/10.0)
+[![System.Text.Json](https://img.shields.io/badge/JSON-System.Text.Json-512BD4)](https://learn.microsoft.com/dotnet/standard/serialization/system-text-json/overview)
+[![CI](https://github.com/kleberandrade/prime-json/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/kleberandrade/prime-json/actions/workflows/ci.yml?query=branch%3Amain)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
 A small C# library for parsing, editing, and writing JSON as a mutable tree.
 It provides `JSONObject`, `JSONArray`, and `JSONData` nodes rather than mapping
 JSON to application classes. Originally written for .NET Framework 4.5, this
